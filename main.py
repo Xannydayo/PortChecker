@@ -29,17 +29,21 @@ def get_ip_and_ports(url):
         t = threading.Thread(target=loading_animation)
         t.start()
         
-        open_ports = []
-        for port in tqdm(range(1, 1025), desc="Scanning ports", unit="port"):
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(0.5)  # Reduce timeout to make scanning faster
-            result = sock.connect_ex((ip_address, port))
-            if result == 0:
-                open_ports.append(port)
-            sock.close()
-        
-        done = True
-        t.join()
+        try:
+            open_ports = []
+            for port in tqdm(range(1, 1025), desc="Scanning ports", unit="port"):
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(0.5)  # Reduce timeout to make scanning faster
+                result = sock.connect_ex((ip_address, port))
+                if result == 0:
+                    open_ports.append(port)
+                sock.close()
+        except KeyboardInterrupt:
+            done = True  # Stop the loading animation
+            print("\nScanning interrupted.")
+        finally:
+            done = True  # Ensure the loading animation stops
+            t.join()  # Wait for the thread to finish
         
         if open_ports:
             for port in open_ports:
@@ -50,6 +54,9 @@ def get_ip_and_ports(url):
         print(e)
 
 if __name__ == "__main__":
-    url = input("Enter URL: ")
-    get_ip_and_ports(url)
+    try:
+        url = input("Enter URL: ")
+        get_ip_and_ports(url)
+    except EOFError:
+        print("Error: No input provided. Please enter a valid URL.")
     print("\nCreated by Xannydayo")
